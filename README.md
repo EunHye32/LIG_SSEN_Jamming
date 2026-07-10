@@ -1,5 +1,5 @@
 # LIG_SSEN_Jamming
-Side project : Make jamming signal.  
+- Side project : Make jamming signal.  
 
 ### [Team member]
 - Kim Eunhye
