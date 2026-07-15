@@ -21,13 +21,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <stdio.h>
 #include <string.h>
 #include "NRF24.h"
 #include "NRF24_reg_addresses.h"
 
 #define PLD_SIZE 32
 
-#define tx
+// Modify V2 : Remove define tx logic
+// #define tx
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -68,13 +71,22 @@ static void MX_SPI4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// Modify V2 : Remove #define tx logic
+uint8_t data_T[PLD_SIZE] = { "Hello!!" };
+uint8_t data_R[PLD_SIZE];
+uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // 주소 확인 필요
+
+/* Modify V2 : Remove define tx logic
 #ifdef tx
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
-uint8_t ack[PLD_SIZE];
+uint8_t ack_T[PLD_SIZE];
 #else
 uint8_t data_R[PLD_SIZE];
 uint8_t ack_R[PLD_SIZE] = { "Received" };
 #endif
+*/
+
 /* USER CODE END 0 */
 
 /**
@@ -111,18 +123,88 @@ int main(void)
   /* USER CODE BEGIN 2 */
   csn_high();
 
+  // Modify V2 : TX 모듈 초기화
+  nrf24_select_module(0);
+  nrf24_init();
+  nrf24_tx_pwr(_0dbm);
+  nrf24_data_rate(_1mbps);
+  nrf24_set_channel(78);
+  nrf24_open_tx_pipe(addr);
+  nrf24_stop_listen();
+
+  // Modify V2 : RX 모듈 초기화
+  nrf24_select_module(1);
+  nrf24_init();
+  nrf24_tx_pwr(_0dbm);
+  nrf24_data_rate(_1mbps);
+  nrf24_set_channel(78);
+  nrf24_pipe_pld_size(0, PLD_SIZE);
+  nrf24_open_rx_pipe(0, addr);
+  nrf24_listen();
+
+  /* Modify V2
   nrf24_init();
   nrf24_tx_pwr(_0dbm);
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _1byte);
   nrf24_pipe_pld_size(0, PLD_SIZE);
+  uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
+  nrf24_open_tx_pipe(addr);
+  nrf24_open_rx_pipe(0, addr);
+  */
+
+  /* Modify V2 : Remove #define tx logic
+#ifdef tx
+  nrf24_stop_listen();
+#else
+  nrf24_listen();
+#endif
+*/
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // Modify V2 : TX
+	  nrf24_select_module(0);
+	  nrf24_transmit(data_T, sizeof(data_T));
+
+	  // Modify V2 : RX
+	  nrf24_select_module(1);
+	  if(nrf24_data_available()) {
+		  nrf24_receive(data_R, sizeof(data_R));
+
+	  	  char tmp[40];
+	  	  sprintf(tmp, "| %s |\r\n", data_R);
+	  	  HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
+	  	  memset(data_R, 0, sizeof(data_R));
+	  }
+
+	  HAL_Delay(10);
+
+	  	  /* Modify V2 : Remove #define tx logic
+#ifdef tx
+	  nrf24_transmit(data_T, sizeof(data_T));
+#else
+	  nrf24_listen();
+
+
+	  if(nrf24_data_available()) {
+		  nrf24_receive(data_R, sizeof(data_R))
+	  }
+
+	  char tmp[40];
+	  spintf(tmp, "| %s |\r\n", data_R);
+	  HAL_UART_Transmit(&hart1, tmp, strlen(tmp), 200);
+
+	  // Modify V1
+	  for(uint8_t i = 0; i < sizeof(data_R); i++) {
+		  data_R[i] = '\0';
+	  }
+#endif */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -474,8 +556,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(TE_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RDX_Pin WRX_DCX_Pin NRF_RX_CSN_Pin NRF_RX_CE_Pin */
-  GPIO_InitStruct.Pin = RDX_Pin|WRX_DCX_Pin|NRF_RX_CSN_Pin|NRF_RX_CE_Pin;
+  /*Configure GPIO pins : RDX_Pin WRX_DCX_Pin */
+  GPIO_InitStruct.Pin = RDX_Pin|WRX_DCX_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -521,6 +603,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF14_LTDC;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : NRF_RX_CSN_Pin NRF_RX_CE_Pin */
+  GPIO_InitStruct.Pin = NRF_RX_CSN_Pin|NRF_RX_CE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : NRF_RX_IRQ_Pin */
+  GPIO_InitStruct.Pin = NRF_RX_IRQ_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(NRF_RX_IRQ_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pins : G3_Pin B4_Pin */
   GPIO_InitStruct.Pin = G3_Pin|B4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -540,7 +635,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = NRF_TX_CSN_Pin|NRF_TX_CE_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SDCKE1_Pin SDNE1_Pin */
@@ -550,12 +645,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : NRF_TX_IRQ_Pin */
-  GPIO_InitStruct.Pin = NRF_TX_IRQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(NRF_TX_IRQ_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

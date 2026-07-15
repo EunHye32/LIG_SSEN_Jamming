@@ -219,6 +219,8 @@ void Error_Handler(void);
 #define NRF_RX_CE_GPIO_Port GPIOD
 #define B2_Pin GPIO_PIN_6
 #define B2_GPIO_Port GPIOD
+#define NRF_RX_IRQ_Pin GPIO_PIN_7
+#define NRF_RX_IRQ_GPIO_Port GPIOD
 #define G3_Pin GPIO_PIN_10
 #define G3_GPIO_Port GPIOG
 #define B3_Pin GPIO_PIN_11
@@ -239,8 +241,6 @@ void Error_Handler(void);
 #define SDCKE1_GPIO_Port GPIOB
 #define SDNE1_Pin GPIO_PIN_6
 #define SDNE1_GPIO_Port GPIOB
-#define NRF_TX_IRQ_Pin GPIO_PIN_7
-#define NRF_TX_IRQ_GPIO_Port GPIOB
 #define B6_Pin GPIO_PIN_8
 #define B6_GPIO_Port GPIOB
 #define B7_Pin GPIO_PIN_9

@@ -41,6 +41,11 @@ enum {
 	disable = 0
 };
 
+/*
+ * Modify V2 : Add new function (by Eunhye Kim)
+ * Select Tx or Rx module. 0: TX (PB3, PB4), 1: RX (PD4, PD5)
+ */
+void nrf24_select_module(uint8_t module);
 
 /*
  * Set defaults
