@@ -2,7 +2,7 @@
 - Side project : Make jamming signal. 
 
 ### [Team member]
-- Eunhye Kim (김은혜)
+- Eunhye Kim (김은혜).
 - Ohreum Yoon (윤오름)
 
 ### [Rules of Engagement Flowchart(ROE Flowchart)]
