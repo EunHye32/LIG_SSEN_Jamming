@@ -76,7 +76,7 @@ static void MX_SPI4_Init(void);
 // Modify V2 : Remove #define tx logic
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t data_R[PLD_SIZE];
-uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // 주소 확인 필요
+uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // 주소 ?��?�� ?��?��
 */
 
 // Modify V3 : Test Tx, Rx function
@@ -126,7 +126,7 @@ int main(void)
   csn_high();
 
   /* Modify V3 : Test Tx, Rx function
-  // Modify V2 : TX 모듈 초기화
+  // Modify V2 : TX 모듈 초기?��
   nrf24_select_module(0);
   nrf24_init();
   nrf24_tx_pwr(_0dbm);
@@ -135,7 +135,7 @@ int main(void)
   nrf24_open_tx_pipe(addr);
   nrf24_stop_listen();
 
-  // Modify V2 : RX 모듈 초기화
+  // Modify V2 : RX 모듈 초기?��
   nrf24_select_module(1);
   nrf24_init();
   nrf24_tx_pwr(_0dbm);
@@ -283,7 +283,7 @@ static void MX_SPI4_Init(void)
   hspi4.Init.CLKPolarity = SPI_POLARITY_LOW;
   hspi4.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi4.Init.NSS = SPI_NSS_SOFT;
-  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi4.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
   hspi4.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi4.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi4.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -317,7 +317,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
+  htim1.Init.Prescaler = 71;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
