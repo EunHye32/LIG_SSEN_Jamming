@@ -72,6 +72,7 @@ static void MX_SPI4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Commit Test 1
 // Modify V2 : Remove #define tx logic
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t data_R[PLD_SIZE];
