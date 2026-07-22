@@ -3,6 +3,7 @@ Work/
 
 # STM32CubeIDE workspace
 .metadata/
+.settings/
 
 # STM32 build outputs
 Debug/
