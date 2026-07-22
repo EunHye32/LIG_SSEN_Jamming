@@ -13,7 +13,7 @@
 extern SPI_HandleTypeDef hspiX;
 extern TIM_HandleTypeDef htimX;
 
-// Modify V2 : Add new function
+/* Modify V2 : Add new function
 uint8_t active_nrf = 0; // 0: TX (PB3, PB4), 1: RX (PD4, PD5)
 
 void nrf24_select_module(uint8_t module) {
@@ -52,8 +52,9 @@ void ce_low(void){
     }
 }
 // Modify V2 : Add new function
+*/
 
-/* Modify V2 : Add new function
+// Modify V3 : Test Tx, Rx function
 void csn_high(void){
 	HAL_GPIO_WritePin(csn_gpio_port, csn_gpio_pin, 1);
 }
@@ -69,7 +70,6 @@ void ce_high(void){
 void ce_low(void){
 	HAL_GPIO_WritePin(ce_gpio_port, ce_gpio_pin, 0);
 }
-*/
 
 void nrf24_w_reg(uint8_t reg, uint8_t *data, uint8_t size){
 

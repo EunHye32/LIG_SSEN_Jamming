@@ -28,8 +28,8 @@
 
 #define PLD_SIZE 32
 
-// Modify V2 : Remove define tx logic
-// #define tx
+// Modify V3 : Test Tx, Rx function
+#define tx
 
 /* USER CODE END Includes */
 
@@ -72,13 +72,15 @@ static void MX_SPI4_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// Commit Test 1
+/* Modify V3 : Test Tx, Rx function
 // Modify V2 : Remove #define tx logic
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t data_R[PLD_SIZE];
 uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // 주소 확인 필요
+*/
 
-/* Modify V2 : Remove define tx logic
+// Modify V3 : Test Tx, Rx function
+// Modify V2 : Remove define tx logic
 #ifdef tx
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t ack_T[PLD_SIZE];
@@ -86,7 +88,6 @@ uint8_t ack_T[PLD_SIZE];
 uint8_t data_R[PLD_SIZE];
 uint8_t ack_R[PLD_SIZE] = { "Received" };
 #endif
-*/
 
 /* USER CODE END 0 */
 
@@ -124,6 +125,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   csn_high();
 
+  /* Modify V3 : Test Tx, Rx function
   // Modify V2 : TX 모듈 초기화
   nrf24_select_module(0);
   nrf24_init();
@@ -142,8 +144,9 @@ int main(void)
   nrf24_pipe_pld_size(0, PLD_SIZE);
   nrf24_open_rx_pipe(0, addr);
   nrf24_listen();
+  Modify V2 : Remove #define tx logic */
 
-  /* Modify V2
+  // Modify V3 : Test Tx, Rx function
   nrf24_init();
   nrf24_tx_pwr(_0dbm);
   nrf24_data_rate(_1mbps);
@@ -153,15 +156,13 @@ int main(void)
   uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
   nrf24_open_tx_pipe(addr);
   nrf24_open_rx_pipe(0, addr);
-  */
 
-  /* Modify V2 : Remove #define tx logic
+// Modify V3 : Test Tx, Rx function
 #ifdef tx
   nrf24_stop_listen();
 #else
   nrf24_listen();
 #endif
-*/
 
   /* USER CODE END 2 */
 
@@ -169,7 +170,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Modify V2 : TX
+	  /* Modify V3 : Test Tx, Rx function
 	  nrf24_select_module(0);
 	  nrf24_transmit(data_T, sizeof(data_T));
 
@@ -183,10 +184,9 @@ int main(void)
 	  	  HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
 	  	  memset(data_R, 0, sizeof(data_R));
 	  }
+	  */
 
-	  HAL_Delay(10);
-
-	  	  /* Modify V2 : Remove #define tx logic
+	  	  // Modify V2 : Remove #define tx logic
 #ifdef tx
 	  nrf24_transmit(data_T, sizeof(data_T));
 #else
@@ -205,7 +205,9 @@ int main(void)
 	  for(uint8_t i = 0; i < sizeof(data_R); i++) {
 		  data_R[i] = '\0';
 	  }
-#endif */
+#endif // Modify V3 : Test Tx, Rx function
+
+	  HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
