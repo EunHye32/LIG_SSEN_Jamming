@@ -28,8 +28,8 @@
 
 #define PLD_SIZE 32
 
-// Modify V3 : Test Tx, Rx function
-#define tx
+// Modify V2 : Remove define tx logic
+// #define tx
 
 /* USER CODE END Includes */
 
@@ -66,21 +66,42 @@ static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_SPI4_Init(void);
 /* USER CODE BEGIN PFP */
-
+static void uart_log(const char *message);
+static void nrf24_log_state(uint8_t module, const char *name);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-/* Modify V3 : Test Tx, Rx function
 // Modify V2 : Remove #define tx logic
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t data_R[PLD_SIZE];
-uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // Ï£ºÏÜå ?ôï?ù∏ ?ïÑ?öî
-*/
+uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // Ï£ºÏÜå ÌôïÏù∏ ÌïÑÏöî
 
-// Modify V3 : Test Tx, Rx function
-// Modify V2 : Remove define tx logic
+static void uart_log(const char *message)
+{
+  HAL_UART_Transmit(&huart1, (uint8_t *)message, strlen(message), 200);
+}
+
+static void nrf24_log_state(uint8_t module, const char *name)
+{
+  char message[96];
+  uint8_t status;
+  uint8_t config;
+  uint8_t channel;
+
+  nrf24_select_module(module);
+  status = nrf24_r_status();
+  config = nrf24_r_reg(CONFIG, 1);
+  channel = nrf24_r_reg(RF_CH, 1);
+
+  snprintf(message, sizeof(message),
+           "%s STATUS=0x%02X CONFIG=0x%02X RF_CH=%u\r\n",
+           name, status, config, channel);
+  uart_log(message);
+}
+
+/* Modify V2 : Remove define tx logic
 #ifdef tx
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t ack_T[PLD_SIZE];
@@ -88,6 +109,7 @@ uint8_t ack_T[PLD_SIZE];
 uint8_t data_R[PLD_SIZE];
 uint8_t ack_R[PLD_SIZE] = { "Received" };
 #endif
+*/
 
 /* USER CODE END 0 */
 
@@ -123,30 +145,49 @@ int main(void)
   MX_USART1_UART_Init();
   MX_SPI4_Init();
   /* USER CODE BEGIN 2 */
-  csn_high();
+  /* The two radios share SPI4. Both slaves must be de-selected before the
+   * first SPI transaction. */
+  HAL_GPIO_WritePin(NRF_TX_CSN_GPIO_Port, NRF_TX_CSN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_RX_CSN_GPIO_Port, NRF_RX_CSN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_TX_CE_GPIO_Port, NRF_TX_CE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_RX_CE_GPIO_Port, NRF_RX_CE_Pin, GPIO_PIN_RESET);
+  HAL_Delay(10);
 
-  /* Modify V3 : Test Tx, Rx function
-  // Modify V2 : TX Î™®Îìà Ï¥àÍ∏∞?ôî
+  uart_log("BOOT: nRF24 communication test\r\n");
+
+  uart_log("TX init start\r\n");
   nrf24_select_module(0);
   nrf24_init();
-  nrf24_tx_pwr(_0dbm);
+  nrf24_stop_listen();
+  nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(78);
+  nrf24_set_crc(en_crc, _2byte);
+  nrf24_set_addr_width(5);
+  nrf24_auto_ack(0, enable);
+  nrf24_auto_retr_delay(4);
+  nrf24_auto_retr_limit(10);
   nrf24_open_tx_pipe(addr);
-  nrf24_stop_listen();
+  nrf24_open_rx_pipe(0, addr);
+  nrf24_log_state(0, "TX");
 
-  // Modify V2 : RX Î™®Îìà Ï¥àÍ∏∞?ôî
+  uart_log("RX init start\r\n");
   nrf24_select_module(1);
   nrf24_init();
-  nrf24_tx_pwr(_0dbm);
+  nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(78);
+  nrf24_set_crc(en_crc, _2byte);
+  nrf24_set_addr_width(5);
+  nrf24_auto_ack(0, enable);
   nrf24_pipe_pld_size(0, PLD_SIZE);
   nrf24_open_rx_pipe(0, addr);
   nrf24_listen();
-  Modify V2 : Remove #define tx logic */
+  HAL_Delay(5);
+  nrf24_log_state(1, "RX");
+  uart_log("INIT complete\r\n");
 
-  // Modify V3 : Test Tx, Rx function
+  /* Modify V2
   nrf24_init();
   nrf24_tx_pwr(_0dbm);
   nrf24_data_rate(_1mbps);
@@ -156,13 +197,15 @@ int main(void)
   uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
   nrf24_open_tx_pipe(addr);
   nrf24_open_rx_pipe(0, addr);
+  */
 
-// Modify V3 : Test Tx, Rx function
+  /* Modify V2 : Remove #define tx logic
 #ifdef tx
   nrf24_stop_listen();
 #else
   nrf24_listen();
 #endif
+*/
 
   /* USER CODE END 2 */
 
@@ -170,23 +213,32 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  /* Modify V3 : Test Tx, Rx function
-	  nrf24_select_module(0);
-	  nrf24_transmit(data_T, sizeof(data_T));
+	  uint8_t tx_result;
 
-	  // Modify V2 : RX
+	  nrf24_select_module(0);
+	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
+	  if (tx_result == NRF24_TX_MAX_RT) {
+		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
+	  } else if (tx_result == NRF24_TX_TIMEOUT) {
+		  uart_log("TX failed: STATUS timeout\r\n");
+	  }
+
+	  //HAL_Delay(50);
+
 	  nrf24_select_module(1);
 	  if(nrf24_data_available()) {
 		  nrf24_receive(data_R, sizeof(data_R));
+		  data_R[PLD_SIZE - 1] = '\0';
 
 	  	  char tmp[40];
-	  	  sprintf(tmp, "| %s |\r\n", data_R);
+	  	  snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
 	  	  HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
 	  	  memset(data_R, 0, sizeof(data_R));
 	  }
-	  */
 
-	  	  // Modify V2 : Remove #define tx logic
+	  HAL_Delay(500);
+
+	  	  /* Modify V2 : Remove #define tx logic
 #ifdef tx
 	  nrf24_transmit(data_T, sizeof(data_T));
 #else
@@ -205,9 +257,7 @@ int main(void)
 	  for(uint8_t i = 0; i < sizeof(data_R); i++) {
 		  data_R[i] = '\0';
 	  }
-#endif // Modify V3 : Test Tx, Rx function
-
-	  HAL_Delay(10);
+#endif */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -317,7 +367,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 71;
+  htim1.Init.Prescaler = 72 - 1;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -405,13 +455,15 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(ACP_RST_GPIO_Port, ACP_RST_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, RDX_Pin|WRX_DCX_Pin|NRF_RX_CSN_Pin|NRF_RX_CE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, RDX_Pin|WRX_DCX_Pin|NRF_RX_CE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, NRF_RX_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, LD3_Pin|LD4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, NRF_TX_CSN_Pin|NRF_TX_CE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, NRF_TX_CE_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, NRF_TX_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : A0_Pin A1_Pin A2_Pin A3_Pin
                            A4_Pin A5_Pin SDNRAS_Pin A6_Pin

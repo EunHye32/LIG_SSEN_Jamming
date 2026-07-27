@@ -8,6 +8,10 @@
 #ifndef NRF_24_H
 #define NRF_24_H
 
+#define NRF24_TX_OK       0U
+#define NRF24_TX_MAX_RT   1U
+#define NRF24_TX_TIMEOUT  2U
+
 enum data_rate {
 	_1mbps   = 0,
 	_2mbps   = 1,
@@ -123,14 +127,14 @@ void nrf24_tx_pwr(uint8_t pwr);
 void nrf24_data_rate(uint8_t bps);
 
 
-/*Set channel from 0 to 125 (In summary it has 126 channel from 1400Mhz to 1525Mhz)
+/*Set channel from 0 to 125 (In summary it has 126 channels from 2400MHz to 2525MHz)
  *
  * Frequency -> channel
  *
- * 1400Mhz -> 0
- * 1401Mhz -> 1
+ * 2400MHz -> 0
+ * 2401MHz -> 1
  *  ....
- * 1525Mhz -> 125
+ * 2525MHz -> 125
  */
 void nrf24_set_channel(uint8_t ch);
 
@@ -371,4 +375,3 @@ void delay_us(uint16_t del_time);
 
 
 #endif
-
