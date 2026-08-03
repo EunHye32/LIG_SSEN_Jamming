@@ -1,5 +1,5 @@
 /*
- * 25-JUL-2024
+ * 2026-08-03
  * STM32 HAL NRF24 LIBRARY
  *
  */
@@ -46,7 +46,7 @@ enum {
 };
 
 /*
- * Modify V2 : Add new function (by Eunhye Kim)
+ * Add new function for select module.
  * Select Tx or Rx module. 0: TX (PB3, PB4), 1: RX (PD4, PD5)
  */
 void nrf24_select_module(uint8_t module);
@@ -358,14 +358,6 @@ uint8_t nrf24_data_available(void);
  * Receive data
  */
 void nrf24_receive(uint8_t *data, uint8_t size);
-
-
-//Will be soon
-void nrf24_start_const_carrier();
-
-
-//Will be soon
-void nrf24_stop_const_carrier();
 
 
 /*

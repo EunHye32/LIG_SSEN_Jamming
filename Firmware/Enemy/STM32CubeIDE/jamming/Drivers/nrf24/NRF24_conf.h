@@ -1,5 +1,5 @@
 /*
- * 25-JUL-2024
+ * 2026-08-03
  * STM32 HAL NRF24 LIBRARY
  */
 
@@ -11,28 +11,13 @@
 #define spi_r_timeout 100
 #define spi_rw_timeout 100
 
-// Modify V1 : TX 보드용
+// TX
 #define csn_gpio_port GPIOB
 #define csn_gpio_pin GPIO_PIN_3
 
+// RX
 #define ce_gpio_port GPIOB
 #define ce_gpio_pin GPIO_PIN_4
-
-/* Modify V2 : NRF24.c에서 직접 제어
-// Modify V1 : RX 보드용
-#define csn_gpio_port GPIOD
-#define csn_gpio_pin GPIO_PIN_4
-
-#define ce_gpio_port GPIOD
-#define ce_gpio_pin GPIO_PIN_5
-
-// Modify V1 : TX 보드용
-#define csn_gpio_port GPIOA
-#define csn_gpio_pin GPIO_PIN_3
-
-#define ce_gpio_port GPIOA
-#define ce_gpio_pin GPIO_PIN_4
-*/
 
 #define htimX htim1
 

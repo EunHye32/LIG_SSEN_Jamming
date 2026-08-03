@@ -3,6 +3,7 @@
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
+  * @author         : OhReum Yoon and EunHye Kim
   ******************************************************************************
   * @attention
   *
@@ -27,9 +28,6 @@
 #include "NRF24_reg_addresses.h"
 
 #define PLD_SIZE 32
-
-// Modify V2 : Remove define tx logic
-// #define tx
 
 /* USER CODE END Includes */
 
@@ -73,10 +71,9 @@ static void nrf24_log_state(uint8_t module, const char *name);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-// Modify V2 : Remove #define tx logic
 uint8_t data_T[PLD_SIZE] = { "Hello!!" };
 uint8_t data_R[PLD_SIZE];
-uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 }; // 주소 확인 필요
+uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
 
 static void uart_log(const char *message)
 {
@@ -100,16 +97,6 @@ static void nrf24_log_state(uint8_t module, const char *name)
            name, status, config, channel);
   uart_log(message);
 }
-
-/* Modify V2 : Remove define tx logic
-#ifdef tx
-uint8_t data_T[PLD_SIZE] = { "Hello!!" };
-uint8_t ack_T[PLD_SIZE];
-#else
-uint8_t data_R[PLD_SIZE];
-uint8_t ack_R[PLD_SIZE] = { "Received" };
-#endif
-*/
 
 /* USER CODE END 0 */
 
@@ -168,7 +155,6 @@ int main(void)
   nrf24_auto_retr_delay(4);
   nrf24_auto_retr_limit(10);
   nrf24_open_tx_pipe(addr);
-  nrf24_open_rx_pipe(0, addr);
   nrf24_log_state(0, "TX");
 
   uart_log("RX init start\r\n");
@@ -187,26 +173,6 @@ int main(void)
   nrf24_log_state(1, "RX");
   uart_log("INIT complete\r\n");
 
-  /* Modify V2
-  nrf24_init();
-  nrf24_tx_pwr(_0dbm);
-  nrf24_data_rate(_1mbps);
-  nrf24_set_channel(78);
-  nrf24_set_crc(en_crc, _1byte);
-  nrf24_pipe_pld_size(0, PLD_SIZE);
-  uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
-  nrf24_open_tx_pipe(addr);
-  nrf24_open_rx_pipe(0, addr);
-  */
-
-  /* Modify V2 : Remove #define tx logic
-#ifdef tx
-  nrf24_stop_listen();
-#else
-  nrf24_listen();
-#endif
-*/
-
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -223,8 +189,6 @@ int main(void)
 		  uart_log("TX failed: STATUS timeout\r\n");
 	  }
 
-	  //HAL_Delay(50);
-
 	  nrf24_select_module(1);
 	  if(nrf24_data_available()) {
 		  nrf24_receive(data_R, sizeof(data_R));
@@ -238,26 +202,6 @@ int main(void)
 
 	  HAL_Delay(500);
 
-	  	  /* Modify V2 : Remove #define tx logic
-#ifdef tx
-	  nrf24_transmit(data_T, sizeof(data_T));
-#else
-	  nrf24_listen();
-
-
-	  if(nrf24_data_available()) {
-		  nrf24_receive(data_R, sizeof(data_R))
-	  }
-
-	  char tmp[40];
-	  spintf(tmp, "| %s |\r\n", data_R);
-	  HAL_UART_Transmit(&hart1, tmp, strlen(tmp), 200);
-
-	  // Modify V1
-	  for(uint8_t i = 0; i < sizeof(data_R); i++) {
-		  data_R[i] = '\0';
-	  }
-#endif */
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

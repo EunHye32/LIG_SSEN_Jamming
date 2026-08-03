@@ -20,6 +20,7 @@ build/
 *.obj
 *.d
 *.su
+*.launch
 
 # KiCad temporary and backup files
 *-backups/
