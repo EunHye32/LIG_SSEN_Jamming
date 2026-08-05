@@ -1,0 +1,13 @@
+{
+  "folders": [
+    {
+      "name": "Ally",
+      "path": "Firmware/Ally/STM32CubeIDE/jamming"
+    },
+    {
+      "name": "Enemy",
+      "path": "Firmware/Enemy/STM32CubeIDE/jamming"
+    }
+  ],
+  "settings": {}
+}
