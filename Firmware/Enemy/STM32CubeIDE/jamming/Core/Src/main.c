@@ -71,9 +71,29 @@ static void nrf24_log_state(uint8_t module, const char *name);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t data_T[PLD_SIZE] = { "Hello!!" };
+// printf
+int __io_putchar(int ch)
+{
+ if ( ch == '\n' )
+	 HAL_UART_Transmit(&huart1, (uint8_t*)&"\r", 1, HAL_MAX_DELAY);
+ HAL_UART_Transmit(&huart1, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
+ return ch;
+}
+int __io_getchar(void)
+{
+	uint8_t ch;
+
+	while( HAL_OK != HAL_UART_Receive(&huart1, &ch, 1, HAL_MAX_DELAY) )
+	{
+		;
+	}
+	return ch;
+}
+
+uint8_t data_T[PLD_SIZE];
 uint8_t data_R[PLD_SIZE];
 uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
+uint8_t txCount = 0;
 
 static void uart_log(const char *message)
 {
@@ -155,6 +175,7 @@ int main(void)
   nrf24_auto_retr_delay(4);
   nrf24_auto_retr_limit(10);
   nrf24_open_tx_pipe(addr);
+  nrf24_open_rx_pipe(0, addr);
   nrf24_log_state(0, "TX");
 
   uart_log("RX init start\r\n");
@@ -182,6 +203,10 @@ int main(void)
 	  uint8_t tx_result;
 
 	  nrf24_select_module(0);
+
+    memset(data_T, 0, sizeof(data_T));
+    snprintf((char *)data_T, sizeof(data_T), "%d", txCount++);
+
 	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
 	  if (tx_result == NRF24_TX_MAX_RT) {
 		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
@@ -194,10 +219,16 @@ int main(void)
 		  nrf24_receive(data_R, sizeof(data_R));
 		  data_R[PLD_SIZE - 1] = '\0';
 
-	  	  char tmp[40];
-	  	  snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
-	  	  HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
-	  	  memset(data_R, 0, sizeof(data_R));
+      if(strcmp(data_R, data_T)) {
+        uart_log("RX failed: Invalid data\r\n");
+      } else {
+        printf("TX : %s, RX : %s\n", data_T, data_R);
+        //char tmp[40];
+	  	  //snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
+	  	  //HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
+      }
+
+	  	memset(data_R, 0, sizeof(data_R));
 	  }
 
 	  HAL_Delay(500);
