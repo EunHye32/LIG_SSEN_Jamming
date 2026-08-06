@@ -219,6 +219,10 @@ int main(void)
 		  nrf24_receive(data_R, sizeof(data_R));
 		  data_R[PLD_SIZE - 1] = '\0';
 
+      // Modify V6
+      printf("TX : %s, RX : %s\n", data_T, data_R);
+
+      /*
       if(strcmp(data_R, data_T)) {
         uart_log("RX failed: Invalid data\r\n");
       } else {
@@ -227,6 +231,7 @@ int main(void)
 	  	  //snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
 	  	  //HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
       }
+      */
 
 	  	memset(data_R, 0, sizeof(data_R));
 	  }

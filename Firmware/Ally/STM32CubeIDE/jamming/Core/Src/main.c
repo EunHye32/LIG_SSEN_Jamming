@@ -90,7 +90,7 @@ int __io_getchar(void)
 	return ch;
 }
 
-uint8_t data_T[PLD_SIZE] = { "X" };
+uint8_t data_T[PLD_SIZE] = { "Ally" };  // Modify V5
 uint8_t data_R[PLD_SIZE];
 uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
 
@@ -206,13 +206,16 @@ int main(void)
 	  nrf24_select_module(0);
 
 	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
-	  if (tx_result == NRF24_TX_MAX_RT) {
+	  
+    uart_log("Signal sent\r\n");
+
+    /* Modify V5
+    if (tx_result == NRF24_TX_MAX_RT) {
 		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
 	  } else if (tx_result == NRF24_TX_TIMEOUT) {
 		  uart_log("TX failed: STATUS timeout\r\n");
 	  }
 
-    /*
 	  nrf24_select_module(1);
 	  if(nrf24_data_available()) {
 		  nrf24_receive(data_R, sizeof(data_R));
