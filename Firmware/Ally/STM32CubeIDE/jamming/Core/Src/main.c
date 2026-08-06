@@ -90,10 +90,9 @@ int __io_getchar(void)
 	return ch;
 }
 
-uint8_t data_T[PLD_SIZE];
+uint8_t data_T[PLD_SIZE] = { "X" };
 uint8_t data_R[PLD_SIZE];
 uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
-uint8_t txCount = 0;
 
 static void uart_log(const char *message)
 {
@@ -166,7 +165,7 @@ int main(void)
   nrf24_select_module(0);
   nrf24_init();
   nrf24_stop_listen();
-  nrf24_tx_pwr(n18dbm);
+  nrf24_tx_pwr(_0dbm);  //nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
@@ -178,10 +177,11 @@ int main(void)
   nrf24_open_rx_pipe(0, addr);
   nrf24_log_state(0, "TX");
 
+  /* RX part blocked.
   uart_log("RX init start\r\n");
   nrf24_select_module(1);
   nrf24_init();
-  nrf24_tx_pwr(n18dbm);
+  nrf24_tx_pwr(_0dbm);  //nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
@@ -192,6 +192,7 @@ int main(void)
   nrf24_listen();
   HAL_Delay(5);
   nrf24_log_state(1, "RX");
+  */
   uart_log("INIT complete\r\n");
 
   /* USER CODE END 2 */
@@ -204,9 +205,6 @@ int main(void)
 
 	  nrf24_select_module(0);
 
-    memset(data_T, 0, sizeof(data_T));
-    snprintf((char *)data_T, sizeof(data_T), "%d", txCount++);
-
 	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
 	  if (tx_result == NRF24_TX_MAX_RT) {
 		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
@@ -214,6 +212,7 @@ int main(void)
 		  uart_log("TX failed: STATUS timeout\r\n");
 	  }
 
+    /*
 	  nrf24_select_module(1);
 	  if(nrf24_data_available()) {
 		  nrf24_receive(data_R, sizeof(data_R));
@@ -229,7 +228,9 @@ int main(void)
       }
 
 	  	memset(data_R, 0, sizeof(data_R));
-	  }
+
+      
+	  }*/
 
 	  HAL_Delay(500);
 
