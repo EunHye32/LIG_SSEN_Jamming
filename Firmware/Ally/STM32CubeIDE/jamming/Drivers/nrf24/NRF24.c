@@ -1,5 +1,5 @@
 /*
- * 25-JUL-2024
+ * 2026-08-03
  * STM32 HAL NRF24 LIBRARY
  */
 
@@ -13,11 +13,16 @@
 extern SPI_HandleTypeDef hspiX;
 extern TIM_HandleTypeDef htimX;
 
-/* Modify V2 : Add new function
 uint8_t active_nrf = 0; // 0: TX (PB3, PB4), 1: RX (PD4, PD5)
+static uint8_t delay_timer_started = 0;
+
+#define NRF24_TX_WAIT_TIMEOUT_MS 100U
 
 void nrf24_select_module(uint8_t module) {
-    active_nrf = module;
+    /* De-select both devices before changing the active GPIO pair. */
+    HAL_GPIO_WritePin(NRF_TX_CSN_GPIO_Port, NRF_TX_CSN_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(NRF_RX_CSN_GPIO_Port, NRF_RX_CSN_Pin, GPIO_PIN_SET);
+    active_nrf = (module == 0U) ? 0U : 1U;
 }
 
 void csn_high(void){
@@ -50,25 +55,6 @@ void ce_low(void){
     }else{
     	HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET); // NRF_RX_CE
     }
-}
-// Modify V2 : Add new function
-*/
-
-// Modify V3 : Test Tx, Rx function
-void csn_high(void){
-	HAL_GPIO_WritePin(csn_gpio_port, csn_gpio_pin, 1);
-}
-
-void csn_low(void){
-	HAL_GPIO_WritePin(csn_gpio_port, csn_gpio_pin, 0);
-}
-
-void ce_high(void){
-	HAL_GPIO_WritePin(ce_gpio_port, ce_gpio_pin, 1);
-}
-
-void ce_low(void){
-	HAL_GPIO_WritePin(ce_gpio_port, ce_gpio_pin, 0);
 }
 
 void nrf24_w_reg(uint8_t reg, uint8_t *data, uint8_t size){
@@ -476,9 +462,7 @@ void nrf24_auto_retr_limit(uint8_t limit){
 
 void nrf24_type_to_uint8_t(size_t in, uint8_t* out, uint16_t size){
 	for(uint16_t i = 0; i < size; i++){
-		// Modify V1
 		out[i] = (uint8_t)(in >> (i * 8));
-		//out[i] = (((in & (255 << (i*8)))) >> (i*8));
 	}
 }
 
@@ -491,7 +475,6 @@ size_t nrf24_uint8_t_to_type(uint8_t* in, uint16_t size){
 
 	return out;
 }
-
 
 uint8_t nrf24_transmit(uint8_t *data, uint8_t size){
 
@@ -508,29 +491,28 @@ uint8_t nrf24_transmit(uint8_t *data, uint8_t size){
 	delay_us(20);
 	ce_low();
 
-	// Modify V1
 	uint8_t status = 0;
+	uint32_t started_at = HAL_GetTick();
 	do {
 		status = nrf24_r_status();
+		if ((HAL_GetTick() - started_at) >= NRF24_TX_WAIT_TIMEOUT_MS) {
+			nrf24_flush_tx();
+			return NRF24_TX_TIMEOUT;
+		}
 	} while (!(status & (1 << TX_DS)) && !(status & (1 << MAX_RT)));
 
-	// MAX_RT (최대 재전송 횟수 초과 - 전송 실패)
+	// MAX_RT : TX failed (no ACK)
+	// - Exceeded maximum number of retransmissions.
 	if(status & (1 << MAX_RT)){
 		nrf24_clear_max_rt();
 		nrf24_flush_tx();
-		return 1;
+		return NRF24_TX_MAX_RT;
 	}
 
-	// TX_DS (전송 성공)
+	// TX_DS : TX success
 	nrf24_clear_tx_ds();
 
-	//	if(nrf24_r_status() & (1 << MAX_RT)){
-	//		nrf24_clear_max_rt();
-	//		nrf24_flush_tx();
-	//		return 1;
-	//	}
-
-	return 0;
+	return NRF24_TX_OK;
 }
 
 uint8_t nrf24_transmit_no_ack(uint8_t *data, uint8_t size){
@@ -548,29 +530,28 @@ uint8_t nrf24_transmit_no_ack(uint8_t *data, uint8_t size){
 	delay_us(20);
 	ce_low();
 
-	// Modify V1
 	uint8_t status = 0;
+	uint32_t started_at = HAL_GetTick();
 	do {
 		status = nrf24_r_status();
+		if ((HAL_GetTick() - started_at) >= NRF24_TX_WAIT_TIMEOUT_MS) {
+			nrf24_flush_tx();
+			return NRF24_TX_TIMEOUT;
+		}
 	} while (!(status & (1 << TX_DS)) && !(status & (1 << MAX_RT)));
 
-	// MAX_RT (최대 재전송 횟수 초과 - 전송 실패)
+	// MAX_RT : TX failed (no ACK)
+	// - Exceeded maximum number of retransmissions.
 	if(status & (1 << MAX_RT)){
 		nrf24_clear_max_rt();
 		nrf24_flush_tx();
-		return 1;
+		return NRF24_TX_MAX_RT;
 	}
 
-	// TX_DS (전송 성공)
+	// TX_DS : TX success
 	nrf24_clear_tx_ds();
 
-//	if(nrf24_r_status() & (1 << MAX_RT)){
-//		nrf24_clear_max_rt();
-//		nrf24_flush_tx();
-//		return 1;
-//	}
-
-	return 0;
+	return NRF24_TX_OK;
 }
 
 void nrf24_transmit_rx_ack_pld(uint8_t pipe, uint8_t *data, uint8_t size){
@@ -611,9 +592,7 @@ void nrf24_receive(uint8_t *data, uint8_t size){
 	HAL_SPI_Receive(&hspiX, data, size, spi_r_timeout);
 	csn_high();
 
-	if(!nrf24_read_bit(FIFO_STATUS, RX_EMPTY)){
-		nrf24_clear_rx_dr();
-	}
+	nrf24_clear_rx_dr();
 }
 
 void delay_us(uint16_t del_time){
@@ -622,14 +601,6 @@ void delay_us(uint16_t del_time){
 	while((__HAL_TIM_GET_COUNTER(&htimX)-tmp_t) < del_time){
 		;
 	}
-}
-
-void nrf24_start_const_carrier(){
-
-}
-
-void nrf24_stop_const_carrier(){
-
 }
 
 void nrf24_defaults(void){
@@ -653,8 +624,6 @@ void nrf24_defaults(void){
 	nrf24_auto_retr_delay(0);
 	nrf24_auto_retr_limit(3);
 
-
-	// Modify V1 (5->6)
 	for(uint8_t i = 0; i < 6; i++){
 		nrf24_pipe_pld_size(i, 0);
 		nrf24_cls_rx_pipe(i);
@@ -667,11 +636,18 @@ void nrf24_defaults(void){
 
 void nrf24_init(void){
 
-	if(HAL_TIM_Base_Start(&htimX) != HAL_OK){
-		Error_Handler();
+	/* TIM1 is shared by both radios. Starting the same HAL timer twice returns
+	 * HAL_ERROR because its state remains BUSY while it is running. */
+	if (!delay_timer_started) {
+		if(HAL_TIM_Base_Start(&htimX) != HAL_OK){
+			Error_Handler();
+		}
+		delay_timer_started = 1;
 	}
 
+	ce_low();
 	nrf24_pwr_up();
+	HAL_Delay(5);
 
 	nrf24_flush_tx();
 	nrf24_flush_rx();
@@ -680,4 +656,3 @@ void nrf24_init(void){
 	nrf24_clear_tx_ds();
 	nrf24_clear_max_rt();
 }
-

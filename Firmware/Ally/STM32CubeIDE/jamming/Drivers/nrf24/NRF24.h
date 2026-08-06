@@ -1,5 +1,5 @@
 /*
- * 25-JUL-2024
+ * 2026-08-03
  * STM32 HAL NRF24 LIBRARY
  *
  */
@@ -7,6 +7,10 @@
 
 #ifndef NRF_24_H
 #define NRF_24_H
+
+#define NRF24_TX_OK       0U
+#define NRF24_TX_MAX_RT   1U
+#define NRF24_TX_TIMEOUT  2U
 
 enum data_rate {
 	_1mbps   = 0,
@@ -42,7 +46,7 @@ enum {
 };
 
 /*
- * Modify V2 : Add new function (by Eunhye Kim)
+ * Add new function for select module.
  * Select Tx or Rx module. 0: TX (PB3, PB4), 1: RX (PD4, PD5)
  */
 void nrf24_select_module(uint8_t module);
@@ -123,14 +127,14 @@ void nrf24_tx_pwr(uint8_t pwr);
 void nrf24_data_rate(uint8_t bps);
 
 
-/*Set channel from 0 to 125 (In summary it has 126 channel from 1400Mhz to 1525Mhz)
+/*Set channel from 0 to 125 (In summary it has 126 channels from 2400MHz to 2525MHz)
  *
  * Frequency -> channel
  *
- * 1400Mhz -> 0
- * 1401Mhz -> 1
+ * 2400MHz -> 0
+ * 2401MHz -> 1
  *  ....
- * 1525Mhz -> 125
+ * 2525MHz -> 125
  */
 void nrf24_set_channel(uint8_t ch);
 
@@ -356,14 +360,6 @@ uint8_t nrf24_data_available(void);
 void nrf24_receive(uint8_t *data, uint8_t size);
 
 
-//Will be soon
-void nrf24_start_const_carrier();
-
-
-//Will be soon
-void nrf24_stop_const_carrier();
-
-
 /*
  * Delay in micro seconds for more precision
  */
@@ -371,4 +367,3 @@ void delay_us(uint16_t del_time);
 
 
 #endif
-
