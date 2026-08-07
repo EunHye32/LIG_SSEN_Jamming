@@ -92,7 +92,7 @@ int __io_getchar(void)
 
 uint8_t data_T[PLD_SIZE] = { "Ally" };  // Modify V5
 uint8_t data_R[PLD_SIZE];
-uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
+uint8_t addr[5] = { 0x12, 0x25, 0x37, 0x45, 0x52 }; // Modify V7 : Different address from Enemy
 
 static void uart_log(const char *message)
 {
@@ -170,11 +170,10 @@ int main(void)
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
   nrf24_set_addr_width(5);
-  nrf24_auto_ack(0, enable);
-  nrf24_auto_retr_delay(4);
-  nrf24_auto_retr_limit(10);
-  nrf24_open_tx_pipe(addr);
-  nrf24_open_rx_pipe(0, addr);
+  nrf24_auto_ack(0, disable); // Modify V7 : Disable ack
+  //nrf24_auto_retr_delay(4);
+  //nrf24_auto_retr_limit(0);
+  //nrf24_open_tx_pipe(addr);
   nrf24_log_state(0, "TX");
 
   /* RX part blocked.
@@ -235,7 +234,7 @@ int main(void)
       
 	  }*/
 
-	  HAL_Delay(500);
+	  HAL_Delay(5); // Modify V7 : Reduced delay between transmissions
 
     /* USER CODE END WHILE */
 
