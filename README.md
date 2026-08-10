@@ -8,7 +8,7 @@
 ### [Board and Module]
 - Main Board : STM32F429I-DISC1
 - Module : NRF24L01+PA+LNA 무선 트랜시버 RF 트랜시버 모듈 2.4GHz
-- etc. : Capacitor 10uF/100uF, 리튬 이온 배터리 3.7V
+- etc. : Capacitor 10uF/100uF, 리튬 이온 배터리 3.7V  
 
 ### [Rules of Engagement Flowchart(ROE Flowchart)]
 <img width="500" alt="Jamming_V1" src="https://github.com/user-attachments/assets/0ee23b81-2ad6-4733-9b73-2d7c3a819589" />  
