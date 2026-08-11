@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "583e5c5d_9f6311a0",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1039813
+      },
+      "writtenOn": "2026-08-11T08:30:43Z",
+      "side": 1,
+      "message": "Modify V5 주석 잘 봤습니다.",
+      "revId": "31abd0554d36bbc8821688e80b094dd5f33efdbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    },
+    {
+      "unresolved": true,
+      "key": {
+        "uuid": "614e4046_c7a7003f",
+        "filename": "Firmware/Enemy/STM32CubeIDE/jamming/Core/Src/main.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1039813
+      },
+      "writtenOn": "2026-08-11T08:30:43Z",
+      "side": 1,
+      "message": "지금은 조건문 밖에서 무조건 한번은 찍게 하면 디버깅에 도움이 될거 같습니다.\n최종 코드는 if문 안에 있는 게 맞다고 생각합니다.",
+      "range": {
+        "startLine": 252,
+        "startChar": 13,
+        "endLine": 252,
+        "endChar": 14
+      },
+      "revId": "31abd0554d36bbc8821688e80b094dd5f33efdbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735"
+    }
+  ]
+}
