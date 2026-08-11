@@ -9,5 +9,12 @@
       "path": "Firmware/Enemy/STM32CubeIDE/jamming"
     }
   ],
-  "settings": {}
+  "settings": {
+    "git.showActionButton": {
+      "commit": true,
+      "publish": false,
+      "sync": false
+    },
+    "git.enableStatusBarSync": false
+  }
 }
