@@ -3,7 +3,7 @@
 
 ### [Team member]
 - Eunhye Kim (김은혜)
-- Ohreum Yoon (윤오름)
+- Ohreum Yoon (윤오름) 
 
 ### [Board and Module]
 - Main Board : STM32F429I-DISC1
