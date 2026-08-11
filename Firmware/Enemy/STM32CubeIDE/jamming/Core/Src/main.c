@@ -42,7 +42,6 @@
 // Modify V8: Define packet-count test timing
 #define TEST_PACKET_COUNT 1000U
 #define TX_INTERVAL_MS 500U
-#define RX_DRAIN_TIME_MS 100U
 
 /* USER CODE END PD */
 
@@ -106,9 +105,7 @@ uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
 uint32_t txAttemptCount = 0;
 uint32_t rxCount = 0;
 uint32_t lastTxTick = 0;
-uint32_t testEndTick = 0;
 uint8_t testFinished = 0;
-uint8_t resultReported = 0;
 
 static void uart_log(const char *message)
 {
@@ -220,6 +217,7 @@ int main(void)
   {
     // Modify V8: Run non-blocking TX and RX test loop
     uint32_t now = HAL_GetTick();
+    uint8_t txSent = 0;
 
     if (!testFinished &&
         (txAttemptCount < TEST_PACKET_COUNT) &&
@@ -230,10 +228,10 @@ int main(void)
       // Modify V8: Transmit a fixed payload without snprintf
       txAttemptCount++;
       nrf24_transmit(data_T, sizeof(data_T));
+      txSent = 1;
 
       if (txAttemptCount >= TEST_PACKET_COUNT) {
         testFinished = 1;
-        testEndTick = HAL_GetTick();
       }
     }
 
@@ -245,14 +243,11 @@ int main(void)
       memset(data_R, 0, sizeof(data_R));
     }
 
-    // Modify V8: Print TX and RX counts
-    if (testFinished && !resultReported &&
-        ((HAL_GetTick() - testEndTick) >= RX_DRAIN_TIME_MS)) {
-      
+    // Modify V8: Print TX and RX counts after each transmission
+    if (txSent) {
       printf("TX=%lu RX=%lu\n",
              (unsigned long)txAttemptCount,
              (unsigned long)rxCount);
-      resultReported = 1;
     }
 
     /* USER CODE END WHILE */
