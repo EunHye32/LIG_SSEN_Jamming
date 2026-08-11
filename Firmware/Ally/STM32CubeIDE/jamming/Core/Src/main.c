@@ -159,8 +159,6 @@ int main(void)
   HAL_GPIO_WritePin(NRF_RX_CE_GPIO_Port, NRF_RX_CE_Pin, GPIO_PIN_RESET);
   HAL_Delay(10);
 
-  uart_log("BOOT: nRF24 communication test\r\n");
-
   uart_log("TX init start\r\n");
   nrf24_select_module(0);
   nrf24_init();
@@ -170,13 +168,17 @@ int main(void)
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
   nrf24_set_addr_width(5);
-  nrf24_auto_ack(0, disable); // Modify V7 : Disable ack
+  // Modify V8: Disable auto ACK and retries for continuous TX
+  nrf24_auto_ack_all(disable); // Modify V7 : Disable ack
   //nrf24_auto_retr_delay(4);
-  //nrf24_auto_retr_limit(0);
-  //nrf24_open_tx_pipe(addr);
+  nrf24_auto_retr_limit(0);
+  nrf24_open_tx_pipe(addr);
+  nrf24_flush_tx();
+
   nrf24_log_state(0, "TX");
 
-  /* RX part blocked.
+  // Modify V7: RX part blocked.
+  /* 
   uart_log("RX init start\r\n");
   nrf24_select_module(1);
   nrf24_init();
@@ -192,7 +194,6 @@ int main(void)
   HAL_Delay(5);
   nrf24_log_state(1, "RX");
   */
-  uart_log("INIT complete\r\n");
 
   /* USER CODE END 2 */
 
@@ -200,41 +201,19 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  uint8_t tx_result;
+	  // Modify V8: Remove unused variable
+	  //uint8_t tx_result;
 
 	  nrf24_select_module(0);
 
-	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
+	  // Modify V8: Transmit continuously without result tracking
+	  nrf24_transmit(data_T, sizeof(data_T));
 	  
-    uart_log("Signal sent\r\n");
+    // Modify V8: Disable per-packet TX log
+    //uart_log("Signal sent\r\n");
 
-    /* Modify V5
-    if (tx_result == NRF24_TX_MAX_RT) {
-		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
-	  } else if (tx_result == NRF24_TX_TIMEOUT) {
-		  uart_log("TX failed: STATUS timeout\r\n");
-	  }
-
-	  nrf24_select_module(1);
-	  if(nrf24_data_available()) {
-		  nrf24_receive(data_R, sizeof(data_R));
-		  data_R[PLD_SIZE - 1] = '\0';
-
-      if(strcmp(data_R, data_T)) {
-        uart_log("RX failed: Invalid data\r\n");
-      } else {
-        printf("TX : %s, RX : %s\n", data_T, data_R);
-        //char tmp[40];
-	  	  //snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
-	  	  //HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
-      }
-
-	  	memset(data_R, 0, sizeof(data_R));
-
-      
-	  }*/
-
-	  HAL_Delay(5); // Modify V7 : Reduced delay between transmissions
+	  // Modify V8: Remove delay between transmissions
+	  //HAL_Delay(5); // Modify V7 : Reduced delay between transmissions
 
     /* USER CODE END WHILE */
 

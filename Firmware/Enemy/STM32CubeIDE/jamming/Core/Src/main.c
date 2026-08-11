@@ -39,6 +39,11 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
+// Modify V8: Define packet-count test timing
+#define TEST_PACKET_COUNT 1000U
+#define TX_INTERVAL_MS 500U
+#define RX_DRAIN_TIME_MS 100U
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -93,7 +98,17 @@ int __io_getchar(void)
 uint8_t data_T[PLD_SIZE];
 uint8_t data_R[PLD_SIZE];
 uint8_t addr[5] = { 0x10, 0x21, 0x32, 0x43, 0x54 };
-uint8_t txCount = 0;
+
+// Modify V8: Remove unused payload counter
+//uint8_t txCount = 0;
+
+// Modify V8: Add TX and RX test counters
+uint32_t txAttemptCount = 0;
+uint32_t rxCount = 0;
+uint32_t lastTxTick = 0;
+uint32_t testEndTick = 0;
+uint8_t testFinished = 0;
+uint8_t resultReported = 0;
 
 static void uart_log(const char *message)
 {
@@ -171,11 +186,13 @@ int main(void)
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
   nrf24_set_addr_width(5);
-  nrf24_auto_ack(0, enable);
-  nrf24_auto_retr_delay(4);
-  nrf24_auto_retr_limit(10);
+  // Modify V8: Disable auto ACK and retransmission for TX
+  nrf24_auto_ack_all(disable);
+  //nrf24_auto_retr_delay(4);
+  nrf24_auto_retr_limit(0);
   nrf24_open_tx_pipe(addr);
   nrf24_open_rx_pipe(0, addr);
+
   nrf24_log_state(0, "TX");
 
   uart_log("RX init start\r\n");
@@ -186,13 +203,14 @@ int main(void)
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
   nrf24_set_addr_width(5);
-  nrf24_auto_ack(0, enable);
+  // Modify V8: Disable auto ACK and retransmission for RX
+  nrf24_auto_ack_all(disable);
+  nrf24_auto_retr_limit(0);
   nrf24_pipe_pld_size(0, PLD_SIZE);
   nrf24_open_rx_pipe(0, addr);
+  nrf24_flush_rx();
   nrf24_listen();
   HAL_Delay(5);
-  nrf24_log_state(1, "RX");
-  uart_log("INIT complete\r\n");
 
   /* USER CODE END 2 */
 
@@ -200,43 +218,42 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  uint8_t tx_result;
+    // Modify V8: Run non-blocking TX and RX test loop
+    uint32_t now = HAL_GetTick();
 
-	  nrf24_select_module(0);
+    if (!testFinished &&
+        (txAttemptCount < TEST_PACKET_COUNT) &&
+        ((now - lastTxTick) >= TX_INTERVAL_MS)) {
+      lastTxTick = now;
+      nrf24_select_module(0);
 
-    memset(data_T, 0, sizeof(data_T));
-    snprintf((char *)data_T, sizeof(data_T), "%d", txCount++);
+      // Modify V8: Transmit a fixed payload without snprintf
+      txAttemptCount++;
+      nrf24_transmit(data_T, sizeof(data_T));
 
-	  tx_result = nrf24_transmit(data_T, sizeof(data_T));
-	  if (tx_result == NRF24_TX_MAX_RT) {
-		  uart_log("TX failed: MAX_RT (no ACK)\r\n");
-	  } else if (tx_result == NRF24_TX_TIMEOUT) {
-		  uart_log("TX failed: STATUS timeout\r\n");
-	  }
-
-	  nrf24_select_module(1);
-	  if(nrf24_data_available()) {
-		  nrf24_receive(data_R, sizeof(data_R));
-		  data_R[PLD_SIZE - 1] = '\0';
-
-      // Modify V6
-      printf("TX : %s, RX : %s\n", data_T, data_R);
-
-      /*
-      if(strcmp(data_R, data_T)) {
-        uart_log("RX failed: Invalid data\r\n");
-      } else {
-        printf("TX : %s, RX : %s\n", data_T, data_R);
-        //char tmp[40];
-	  	  //snprintf(tmp, sizeof(tmp), "RX: %s\r\n", data_R);
-	  	  //HAL_UART_Transmit(&huart1, (uint8_t*)tmp, strlen(tmp), 200);
+      if (txAttemptCount >= TEST_PACKET_COUNT) {
+        testFinished = 1;
+        testEndTick = HAL_GetTick();
       }
-      */
+    }
 
-	  	memset(data_R, 0, sizeof(data_R));
-	  }
+    nrf24_select_module(1);
+    while (nrf24_data_available()) {
+      nrf24_receive(data_R, sizeof(data_R));
+      rxCount++;
 
-	  HAL_Delay(500);
+      memset(data_R, 0, sizeof(data_R));
+    }
+
+    // Modify V8: Print TX and RX counts
+    if (testFinished && !resultReported &&
+        ((HAL_GetTick() - testEndTick) >= RX_DRAIN_TIME_MS)) {
+      
+      printf("TX=%lu RX=%lu\n",
+             (unsigned long)txAttemptCount,
+             (unsigned long)rxCount);
+      resultReported = 1;
+    }
 
     /* USER CODE END WHILE */
 
