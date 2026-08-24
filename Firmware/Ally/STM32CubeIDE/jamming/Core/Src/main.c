@@ -55,6 +55,10 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+static uint8_t data_T[PLD_SIZE] = "Ally";
+static uint8_t addr[5] = { 0x12, 0x25, 0x37, 0x45, 0x52 };
+static volatile uint8_t is_active = 0U; // Modify V9: Button-controlled TX state
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -89,10 +93,6 @@ int __io_getchar(void)
 	}
 	return ch;
 }
-
-uint8_t data_T[PLD_SIZE] = { "Ally" };  // Modify V5
-uint8_t data_R[PLD_SIZE];
-uint8_t addr[5] = { 0x12, 0x25, 0x37, 0x45, 0x52 }; // Modify V7 : Different address from Enemy
 
 static void uart_log(const char *message)
 {
@@ -168,32 +168,11 @@ int main(void)
   nrf24_set_channel(78);
   nrf24_set_crc(en_crc, _2byte);
   nrf24_set_addr_width(5);
-  // Modify V8: Disable auto ACK and retries for continuous TX
-  nrf24_auto_ack_all(disable); // Modify V7 : Disable ack
-  //nrf24_auto_retr_delay(4);
-  nrf24_auto_retr_limit(0);
+  nrf24_auto_ack_all(disable);
   nrf24_open_tx_pipe(addr);
   nrf24_flush_tx();
 
   nrf24_log_state(0, "TX");
-
-  // Modify V7: RX part blocked.
-  /* 
-  uart_log("RX init start\r\n");
-  nrf24_select_module(1);
-  nrf24_init();
-  nrf24_tx_pwr(_0dbm);  //nrf24_tx_pwr(n18dbm);
-  nrf24_data_rate(_1mbps);
-  nrf24_set_channel(78);
-  nrf24_set_crc(en_crc, _2byte);
-  nrf24_set_addr_width(5);
-  nrf24_auto_ack(0, enable);
-  nrf24_pipe_pld_size(0, PLD_SIZE);
-  nrf24_open_rx_pipe(0, addr);
-  nrf24_listen();
-  HAL_Delay(5);
-  nrf24_log_state(1, "RX");
-  */
 
   /* USER CODE END 2 */
 
@@ -201,19 +180,20 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  // Modify V8: Remove unused variable
-	  //uint8_t tx_result;
+    // Modify V9: Control TX and LEDs with the button state
+    if (is_active)
+    {
+      HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
 
-	  nrf24_select_module(0);
-
-	  // Modify V8: Transmit continuously without result tracking
-	  nrf24_transmit(data_T, sizeof(data_T));
-	  
-    // Modify V8: Disable per-packet TX log
-    //uart_log("Signal sent\r\n");
-
-	  // Modify V8: Remove delay between transmissions
-	  //HAL_Delay(5); // Modify V7 : Reduced delay between transmissions
+      nrf24_select_module(0);
+      nrf24_transmit(data_T, sizeof(data_T));
+    }
+    else
+    {
+      HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
+    }
 
     /* USER CODE END WHILE */
 
@@ -324,7 +304,7 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 1 */
   htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 72 - 1;
+  htim1.Init.Prescaler = 71;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim1.Init.Period = 65535;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -413,14 +393,21 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, RDX_Pin|WRX_DCX_Pin|NRF_RX_CE_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOD, NRF_RX_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOG, LD3_Pin|LD4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_RX_CSN_GPIO_Port, NRF_RX_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, NRF_TX_CE_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(GPIOB, NRF_TX_CSN_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(NRF_TX_CE_GPIO_Port, NRF_TX_CE_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(NRF_TX_CSN_GPIO_Port, NRF_TX_CSN_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : A0_Pin A1_Pin A2_Pin A3_Pin
                            A4_Pin A5_Pin SDNRAS_Pin A6_Pin
@@ -465,8 +452,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : B1_Pin MEMS_INT1_Pin TP_INT1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin|MEMS_INT1_Pin|TP_INT1_Pin;
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : MEMS_INT1_Pin TP_INT1_Pin */
+  GPIO_InitStruct.Pin = MEMS_INT1_Pin|TP_INT1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -658,11 +651,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_FMC;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI0_IRQn, 5, 0);
+  HAL_NVIC_EnableIRQ(EXTI0_IRQn);
+
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == B1_Pin)
+  {
+    // Modify V9: Toggle the TX state on button press
+    is_active = !is_active;
+  }
+}
 
 /* USER CODE END 4 */
 
