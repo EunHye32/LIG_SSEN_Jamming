@@ -258,6 +258,11 @@ void nrf24_listen(void);
 void nrf24_stop_listen(void);
 
 
+/* Start and stop constant carrier output */
+void nrf24_start_const_carrier(uint8_t channel);
+void nrf24_stop_const_carrier(void);
+
+
 /*
  * Enable or disable Dynamic PayLoad by writing 'enable' or 'disable' as an argument
  */

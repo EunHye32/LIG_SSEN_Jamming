@@ -27,8 +27,6 @@
 #include "NRF24.h"
 #include "NRF24_reg_addresses.h"
 
-#define PLD_SIZE 32
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -39,9 +37,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define NRF24_SWEEP_MIN_CHANNEL  0U
-#define NRF24_SWEEP_MAX_CHANNEL  80U
-#define NRF24_CHANNEL_DWELL_MS    2000U
+#define NRF24_FIXED_CHANNEL  78U // Modify V10: Fixed carrier channel
 
 /* USER CODE END PD */
 
@@ -59,12 +55,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-static uint8_t data_T[PLD_SIZE] = "Ally";
-static uint8_t addr[5] = { 0x12, 0x25, 0x37, 0x45, 0x52 };
 static volatile uint8_t is_active = 0U; // Modify V9: Button-controlled TX state
-static uint8_t sweep_channel = NRF24_SWEEP_MIN_CHANNEL;
-static uint8_t sweep_running = 0U;
-static uint32_t channel_started_at = 0U;
+static uint8_t carrier_running = 0U; // Modify V10: Fixed carrier state
 
 /* USER CODE END PV */
 
@@ -172,12 +164,8 @@ int main(void)
   nrf24_stop_listen();
   nrf24_tx_pwr(_0dbm);  //nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
-  nrf24_set_channel(NRF24_SWEEP_MIN_CHANNEL);
-  nrf24_set_crc(en_crc, _2byte);
-  nrf24_set_addr_width(5);
-  nrf24_auto_ack_all(disable);
-  nrf24_open_tx_pipe(addr);
-  nrf24_flush_tx();
+  nrf24_set_channel(NRF24_FIXED_CHANNEL);
+  nrf24_stop_const_carrier();
 
   nrf24_log_state(0, "TX");
 
@@ -187,45 +175,28 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // Modify V9: Control TX and LEDs with the button state
+    // Modify V10: Control the fixed carrier and LEDs with the button state
     if (is_active)
     {
-      uint32_t now = HAL_GetTick();
-
       HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_SET);
 
-      nrf24_select_module(0);
-
-      if (!sweep_running)
+      if (!carrier_running)
       {
-        sweep_channel = NRF24_SWEEP_MIN_CHANNEL;
-        channel_started_at = now;
-        sweep_running = 1U;
-        nrf24_set_channel(sweep_channel);
-        printf("TX channel: %u\n", (unsigned int)sweep_channel);
+        nrf24_select_module(0);
+        nrf24_start_const_carrier(NRF24_FIXED_CHANNEL);
+        carrier_running = 1U;
       }
-      else if ((now - channel_started_at) >= NRF24_CHANNEL_DWELL_MS)
-      {
-        if (sweep_channel >= NRF24_SWEEP_MAX_CHANNEL)
-        {
-          sweep_channel = NRF24_SWEEP_MIN_CHANNEL;
-        }
-        else
-        {
-          sweep_channel++;
-        }
-
-        channel_started_at = now;
-        nrf24_set_channel(sweep_channel);
-        printf("TX channel: %u\n", (unsigned int)sweep_channel);
-      }
-
-      nrf24_transmit(data_T, sizeof(data_T));
     }
     else
     {
-      sweep_running = 0U;
+      if (carrier_running)
+      {
+        nrf24_select_module(0);
+        nrf24_stop_const_carrier();
+        carrier_running = 0U;
+      }
+
       HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
       HAL_GPIO_WritePin(LD4_GPIO_Port, LD4_Pin, GPIO_PIN_RESET);
     }

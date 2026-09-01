@@ -358,6 +358,25 @@ void nrf24_stop_listen(void){
 	nrf24_w_reg(CONFIG, &data, 1);
 }
 
+void nrf24_start_const_carrier(uint8_t channel){
+	ce_low();
+	nrf24_stop_listen();
+	nrf24_pwr_up();
+	HAL_Delay(2);
+
+	nrf24_set_bit(RF_SETUP, CONT_WAVE, 1);
+	nrf24_set_bit(RF_SETUP, PLL_LOCK, 1);
+	nrf24_set_channel(channel);
+	ce_high();
+}
+
+void nrf24_stop_const_carrier(void){
+	ce_low();
+	nrf24_set_bit(RF_SETUP, CONT_WAVE, 0);
+	nrf24_set_bit(RF_SETUP, PLL_LOCK, 0);
+	nrf24_pwr_dwn();
+}
+
 void nrf24_dpl(uint8_t en){
 	uint8_t feature = nrf24_r_reg(FEATURE, 1);
 
