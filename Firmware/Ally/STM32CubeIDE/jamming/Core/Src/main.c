@@ -37,7 +37,7 @@
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
 
-#define NRF24_FIXED_CHANNEL  78U // Modify V10: Fixed carrier channel
+#define NRF24_CHANNEL_DWELL_MS  2000U
 
 /* USER CODE END PD */
 
@@ -57,6 +57,10 @@ UART_HandleTypeDef huart1;
 
 static volatile uint8_t is_active = 0U; // Modify V9: Button-controlled TX state
 static uint8_t carrier_running = 0U; // Modify V10: Fixed carrier state
+// Modify V11: 2402, 2411, 2419, 2428, 2437, 2445, 2454, 2463, 2471, 2478 MHz
+static const uint8_t sweep_channels[] = { 2U, 11U, 19U, 28U, 37U, 45U, 54U, 63U, 71U, 78U };
+static uint8_t sweep_index = 0U;
+static uint32_t channel_started_at = 0U;
 
 /* USER CODE END PV */
 
@@ -164,7 +168,7 @@ int main(void)
   nrf24_stop_listen();
   nrf24_tx_pwr(_0dbm);  //nrf24_tx_pwr(n18dbm);
   nrf24_data_rate(_1mbps);
-  nrf24_set_channel(NRF24_FIXED_CHANNEL);
+  nrf24_set_channel(sweep_channels[0]);
   nrf24_stop_const_carrier();
 
   nrf24_log_state(0, "TX");
@@ -175,7 +179,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // Modify V10: Control the fixed carrier and LEDs with the button state
+    // Modify V11: Control the carrier sweep and LEDs with the button state
     if (is_active)
     {
       HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_RESET);
@@ -184,8 +188,23 @@ int main(void)
       if (!carrier_running)
       {
         nrf24_select_module(0);
-        nrf24_start_const_carrier(NRF24_FIXED_CHANNEL);
+        sweep_index = 0U;
+        nrf24_start_const_carrier(sweep_channels[sweep_index]);
         carrier_running = 1U;
+        channel_started_at = HAL_GetTick();
+      }
+      else if ((HAL_GetTick() - channel_started_at) >= NRF24_CHANNEL_DWELL_MS)
+      {
+        nrf24_stop_const_carrier();
+
+        sweep_index++;
+        if (sweep_index >= (sizeof(sweep_channels) / sizeof(sweep_channels[0])))
+        {
+          sweep_index = 0U;
+        }
+
+        nrf24_start_const_carrier(sweep_channels[sweep_index]);
+        channel_started_at = HAL_GetTick();
       }
     }
     else
