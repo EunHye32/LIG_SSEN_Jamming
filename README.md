@@ -11,14 +11,69 @@
 - etc. : Capacitor 10uF/100uF, 리튬 이온 배터리 3.7V
 
 ### [Hardware images]  
-- Ally
+- Ally  
+
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/6ef3bdfb-f2a7-42bb-aad3-09eb66247dc5" />  
 
-- Ally + Enemy
+- Ally + Enemy  
+
 <img width="500" alt="Ally+Enemy" src="https://github.com/user-attachments/assets/096a9ddc-a845-4bd9-93a3-5cc15e1f0845" />  
 
-### [Rules of Engagement Flowchart(ROE Flowchart)]
-<img width="500" alt="Jamming" src="https://github.com/user-attachments/assets/0ee23b81-2ad6-4733-9b73-2d7c3a819589" />  
+### [Sequence Diagram]
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Operator
+    participant AllyMCU as Ally STM32
+    participant AllyRF as Ally nRF24
+    participant EnemyMCU as Enemy STM32
+    participant EnemyRF as Enemy nRF24 TX/RX
+    participant PuTTY
+
+    Note over AllyMCU,EnemyRF: System initialization
+    AllyMCU->>AllyRF: Set first channel and stop carrier
+    EnemyMCU->>EnemyRF: Configure TX/RX on channel 78 (2478 MHz)
+
+    Note over EnemyMCU,PuTTY: Verify normal Enemy communication
+    loop Every 500 ms
+        EnemyMCU->>EnemyRF: Transmit test packet
+        EnemyRF-->>EnemyMCU: Deliver received packet
+        EnemyMCU->>PuTTY: Print TX=n, RX=n
+    end
+
+    Operator->>AllyMCU: Press user button
+    AllyMCU->>AllyRF: Start constant carrier
+    AllyMCU->>PuTTY: Jamming ON
+    AllyMCU->>PuTTY: Channel : 2402 MHz
+    Note right of AllyMCU: Green LED OFF<br/>Red LED ON
+
+    par Ally representative channel sweep
+        loop 10 channels, 2 seconds per channel
+            AllyMCU->>AllyRF: Stop carrier
+            AllyMCU->>AllyRF: Set next channel and start carrier
+            AllyMCU->>PuTTY: Channel : xxxx MHz
+        end
+    and Enemy packet measurement
+        loop Every 500 ms, up to 1000 packets
+            EnemyMCU->>EnemyRF: Transmit test packet on channel 78
+            alt Packet received normally
+                EnemyRF-->>EnemyMCU: Deliver RX packet
+                EnemyMCU->>PuTTY: TX increases, RX increases
+            else RX affected on matching channel
+                EnemyRF--xEnemyMCU: RX packet missing
+                EnemyMCU->>PuTTY: TX increases, RX unchanged
+            end
+        end
+    end
+
+    Operator->>AllyMCU: Press user button again
+    AllyMCU->>AllyRF: Stop carrier and channel sweep
+    AllyMCU->>PuTTY: Jamming OFF
+    Note right of AllyMCU: Green LED ON<br/>Red LED OFF
+
+    Operator->>PuTTY: Compare TX/RX between OFF and ON
+```
 
 ### [Circuit diagram]
 [1] LIG_SSEN_Jamming\Firmware\Common\jamming
