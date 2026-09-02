@@ -162,7 +162,7 @@ int main(void)
   HAL_GPIO_WritePin(NRF_RX_CE_GPIO_Port, NRF_RX_CE_Pin, GPIO_PIN_RESET);
   HAL_Delay(10);
 
-  uart_log("TX init start\r\n");
+  //uart_log("TX init start\r\n");
   nrf24_select_module(0);
   nrf24_init();
   nrf24_stop_listen();
@@ -170,8 +170,6 @@ int main(void)
   nrf24_data_rate(_1mbps);
   nrf24_set_channel(sweep_channels[0]);
   nrf24_stop_const_carrier();
-
-  nrf24_log_state(0, "TX");
 
   /* USER CODE END 2 */
 
@@ -192,6 +190,10 @@ int main(void)
         nrf24_start_const_carrier(sweep_channels[sweep_index]);
         carrier_running = 1U;
         channel_started_at = HAL_GetTick();
+        // Modify V12: Print carrier state and channel changes to PuTTY
+        uart_log("Jamming ON\r\n");
+        printf("Channel : %u MHz\n",
+               2400U + sweep_channels[sweep_index]);
       }
       else if ((HAL_GetTick() - channel_started_at) >= NRF24_CHANNEL_DWELL_MS)
       {
@@ -205,6 +207,8 @@ int main(void)
 
         nrf24_start_const_carrier(sweep_channels[sweep_index]);
         channel_started_at = HAL_GetTick();
+        printf("Channel : %u MHz\n",
+               2400U + sweep_channels[sweep_index]);
       }
     }
     else
@@ -214,6 +218,7 @@ int main(void)
         nrf24_select_module(0);
         nrf24_stop_const_carrier();
         carrier_running = 0U;
+        uart_log("Jamming OFF\r\n");
       }
 
       HAL_GPIO_WritePin(LD3_GPIO_Port, LD3_Pin, GPIO_PIN_SET);
