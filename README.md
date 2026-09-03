@@ -10,12 +10,14 @@
 - Module : NRF24L01+PA+LNA 무선 트랜시버 RF 트랜시버 모듈 2.4GHz
 - etc. : Capacitor 10uF/100uF, 리튬 이온 배터리 3.7V
 
-### [Hardware images]  
-- Ally  
+### [Hardware]
+- Enemy Function : 1개의 STM 보드에 NRF 2개의 모듈을 사용하여, SPI 통신을 통해 TX 모듈에서 송신된 신호를 RX 모듈에 수신해 터미널에서 출력
+- Ally Function : 1개의 STM 보드에 NRF 1개의 모듈을 TX로 사용하여 재밍 신호 송신
+- Enemy Image  
 
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/6ef3bdfb-f2a7-42bb-aad3-09eb66247dc5" />  
 
-- Ally + Enemy  
+- Ally+Enemy Image  
 
 <img width="500" alt="Ally+Enemy" src="https://github.com/user-attachments/assets/096a9ddc-a845-4bd9-93a3-5cc15e1f0845" />  
 
@@ -105,7 +107,4 @@ sequenceDiagram
 ```
 
 ### [Circuit diagram]
-[1] LIG_SSEN_Jamming\Firmware\Common\jamming
-- Function : 1개의 STM 보드에 NRF 2개의 모듈을 사용하여, SPI 통신을 통해 Tx 모듈에서 나온 신호를 Rx 모듈로 받아 터미널에서 출력
-- Verification results : PASS (2026-07-27)
 <img width="500" alt="image" src="https://github.com/user-attachments/assets/e717b052-0da2-4df3-9ebd-f588dc9b0d19" />
