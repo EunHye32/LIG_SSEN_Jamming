@@ -19,6 +19,9 @@
 
 <img width="500" alt="Ally+Enemy" src="https://github.com/user-attachments/assets/096a9ddc-a845-4bd9-93a3-5cc15e1f0845" />  
 
+### Demo video (PuTTY)
+https://github.com/user-attachments/assets/de4476ce-fcce-4c39-a8cf-4a409a404ca1  
+
 ### [Sequence Diagram]
 
 ```mermaid
