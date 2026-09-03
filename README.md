@@ -20,7 +20,7 @@
 <img width="500" alt="Ally+Enemy" src="https://github.com/user-attachments/assets/096a9ddc-a845-4bd9-93a3-5cc15e1f0845" />  
 
 ### Demo video (PuTTY)
-https://github.com/user-attachments/assets/de4476ce-fcce-4c39-a8cf-4a409a404ca1  
+<img width="500" alt="Ally+Enemy_0903_demo" src="https://github.com/user-attachments/assets/7f271c24-264f-4c07-aec5-d2ca53fb16c0" />  
 
 ### [Sequence Diagram]
 
