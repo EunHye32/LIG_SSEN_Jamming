@@ -22,6 +22,32 @@
 ### [Demo video (PuTTY)]
 <img width="500" alt="Ally+Enemy_0903_demo" src="https://github.com/user-attachments/assets/7f271c24-264f-4c07-aec5-d2ca53fb16c0" />  
 
+### [Folder tree]
+```text
+├── Docs
+│   └── Jamming project summary.pdf
+├── Firmware
+│   ├── Ally
+│   │   └── STM32CubeIDE
+│   │       └── jamming
+│   │           ├── Core/
+│   │           ├── Drivers/
+│   │           ├── STM32F429ZITX_FLASH.ld
+│   │           ├── STM32F429ZITX_RAM.ld
+│   │           └── ally_jamming.ioc
+│   └── Enemy
+│       └── STM32CubeIDE
+│           └── jamming
+│               ├── Core/
+│               ├── Drivers/
+│               ├── STM32F429ZITX_FLASH.ld
+│               ├── STM32F429ZITX_RAM.ld
+│               └── enemy_jamming.ioc
+├── KiCad_project/
+├── LIG_SSEN_Jamming.code-workspace
+└── README.md
+```  
+
 ### [Sequence Diagram]
 
 ```mermaid
